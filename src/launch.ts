@@ -8,6 +8,7 @@
  */
 import {
   appendTransactionMessageInstructions,
+  compileTransaction,
   createSolanaRpc,
   createTransactionMessage,
   generateKeyPairSigner,
@@ -23,6 +24,8 @@ import {
   type Instruction,
   type Rpc,
   type SolanaRpcApi,
+  type Transaction,
+  type TransactionPartialSigner,
   type TransactionSigner,
 } from "@solana/kit";
 import { getCreateAccountInstruction } from "@solana-program/system";
@@ -83,6 +86,12 @@ export interface LaunchResult {
 
 export type Progress = (message: string) => void;
 
+/** Browser wallets implement this so they can sign BEFORE our own keypairs (see sendAndConfirm). */
+export interface WalletFirstSigner {
+  signFirst?: (tx: Transaction) => Promise<Transaction>;
+}
+type Signable = Parameters<TransactionPartialSigner["signTransactions"]>[0][number];
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const jsonSafe = (v: unknown) =>
   JSON.stringify(v, (_k, x) => (typeof x === "bigint" ? x.toString() : x));
@@ -103,8 +112,29 @@ async function sendAndConfirm(
     (m) => appendTransactionMessageInstructions(instructions, m),
   );
 
-  // Signs with every signer embedded in the instructions (e.g. the new mint keypair) plus the payer.
-  const signed = await signTransactionMessageWithSigners(message);
+  let signed: Awaited<ReturnType<typeof signTransactionMessageWithSigners>>;
+  const walletFirst = (payer as TransactionSigner & WalletFirstSigner).signFirst;
+  if (walletFirst) {
+    // Browser wallets (e.g. Phantom) may rewrite the transaction when they sign, which would
+    // invalidate signatures made earlier. So the wallet signs first, then our keypairs sign.
+    let tx = (await walletFirst.call(payer, compileTransaction(message))) as Signable;
+    const extras = new Map<string, TransactionSigner>();
+    for (const ix of instructions) {
+      for (const acc of ix.accounts ?? []) {
+        const s = (acc as { signer?: TransactionSigner }).signer;
+        if (s && s.address !== payer.address) extras.set(s.address, s);
+      }
+    }
+    for (const s of extras.values()) {
+      if (!("signTransactions" in s)) continue;
+      const [sigs] = await s.signTransactions([tx]);
+      tx = { ...tx, signatures: { ...tx.signatures, ...sigs } };
+    }
+    signed = tx as unknown as typeof signed;
+  } else {
+    // Signs with every signer embedded in the instructions (e.g. the new mint keypair) plus the payer.
+    signed = await signTransactionMessageWithSigners(message);
+  }
   const signature = getSignatureFromTransaction(signed);
 
   await rpc

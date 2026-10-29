@@ -1,3 +1,4 @@
+import "./polyfill";
 import type { TransactionPartialSigner } from "@solana/kit";
 import { launchToken, type Network } from "./launch";
 import { connectWallet, listWallets } from "./wallet";
@@ -136,7 +137,7 @@ form.addEventListener("submit", async (ev) => {
   } catch (e) {
     const li = document.createElement("li");
     li.className = "error";
-    li.textContent = e instanceof Error ? e.message : String(e);
+    li.textContent = e instanceof Error ? e.message + (e.cause instanceof Error ? ": " + e.cause.message : "") : String(e);
     logEl.append(li);
   } finally {
     launchBtn.disabled = false;

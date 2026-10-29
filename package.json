@@ -19,7 +19,8 @@
     "@solana/kit": "^5.0.0",
     "@solana/wallet-standard-features": "latest",
     "@wallet-standard/app": "latest",
-    "@wallet-standard/features": "latest"
+    "@wallet-standard/features": "latest",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "@types/node": "latest",

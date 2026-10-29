@@ -12,7 +12,7 @@ import {
   getTransactionEncoder,
   type TransactionPartialSigner,
 } from "@solana/kit";
-import type { Network } from "./launch";
+import type { Network, WalletFirstSigner } from "./launch";
 
 export function listWallets(): Wallet[] {
   return getWallets()
@@ -23,7 +23,7 @@ export function listWallets(): Wallet[] {
 export async function connectWallet(
   wallet: Wallet,
   network: Network,
-): Promise<TransactionPartialSigner> {
+): Promise<TransactionPartialSigner & WalletFirstSigner> {
   const connect = (wallet.features[StandardConnect] as StandardConnectFeature[typeof StandardConnect])
     .connect;
   const { accounts } = await connect();
@@ -40,6 +40,10 @@ export async function connectWallet(
 
   return {
     address: walletAddress,
+    async signFirst(tx) {
+      const [res] = await sign({ account, chain, transaction: new Uint8Array(encoder.encode(tx)) });
+      return decoder.decode(res.signedTransaction);
+    },
     async signTransactions(transactions) {
       const out = [];
       for (const tx of transactions) {
