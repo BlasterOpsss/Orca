@@ -26,7 +26,6 @@
     "tsx": "latest",
     "typescript": "latest",
     "vite": "latest",
-    "vite-plugin-top-level-await": "latest",
     "vite-plugin-wasm": "latest"
   }
 }
