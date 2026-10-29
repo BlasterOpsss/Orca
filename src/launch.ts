@@ -11,6 +11,7 @@ import {
   createSolanaRpc,
   createTransactionMessage,
   generateKeyPairSigner,
+  getAddressEncoder,
   getBase64EncodedWireTransaction,
   getSignatureFromTransaction,
   none,
@@ -200,11 +201,24 @@ export async function launchToken(
 
   // ---- 2. Orca Splash pool ---------------------------------------------
   onProgress("Creating Orca Splash pool…");
+  // Orca wants mints in byte order; if our token sorts second, flip the pair and invert the price.
+  const enc = getAddressEncoder();
+  const bytesA = enc.encode(mint.address);
+  const bytesB = enc.encode(WSOL_MINT);
+  let tokenFirst = true;
+  for (let i = 0; i < 32; i++) {
+    if (bytesA[i] !== bytesB[i]) {
+      tokenFirst = bytesA[i] < bytesB[i];
+      break;
+    }
+  }
+  const [mintA, mintB] = tokenFirst ? [mint.address, WSOL_MINT] : [WSOL_MINT, mint.address];
+  const initialPrice = tokenFirst ? params.priceSol : 1 / params.priceSol;
   const { instructions: poolIxs, poolAddress } = await createSplashPoolInstructions(
     rpc,
-    mint.address,
-    WSOL_MINT,
-    { initialPrice: params.priceSol, funder: payer, whirlpoolDeployment: deployment },
+    mintA,
+    mintB,
+    { initialPrice, funder: payer, whirlpoolDeployment: deployment },
   );
   const poolSig = await sendAndConfirm(rpc, payer, poolIxs);
   onProgress(`Pool created: ${poolAddress}`);
