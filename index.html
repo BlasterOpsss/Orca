@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Launchpad</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Launchpad</h1>
+        <p>Mint a token and open its Orca pool in one go.</p>
+      </header>
+
+      <section class="card" id="wallet-card">
+        <div class="row">
+          <label for="network">Network</label>
+          <select id="network">
+            <option value="devnet" selected>Devnet</option>
+            <option value="mainnet">Mainnet (real SOL)</option>
+          </select>
+        </div>
+        <div class="row">
+          <label for="wallet">Wallet</label>
+          <select id="wallet"></select>
+        </div>
+        <button id="connect" type="button">Connect wallet</button>
+        <p id="account" class="muted"></p>
+      </section>
+
+      <form class="card" id="launch-form" hidden>
+        <div class="grid">
+          <label>Decimals <input name="decimals" type="number" min="0" max="9" value="6" required /></label>
+          <label>Total supply <input name="supply" type="number" min="1" step="1" value="1000000000" required /></label>
+          <label>% of supply to liquidity <input name="liquidity" type="number" min="1" max="100" step="1" value="80" required /></label>
+          <label>Start price (SOL per token) <input name="price" type="number" min="0" step="any" value="0.000001" required /></label>
+        </div>
+        <label class="check"><input name="revoke" type="checkbox" checked /> Revoke mint authority (fixed supply)</label>
+        <p id="summary" class="muted"></p>
+        <button id="launch" type="submit">Launch</button>
+      </form>
+
+      <section class="card" id="log-card" hidden>
+        <ul id="log"></ul>
+        <div id="result"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

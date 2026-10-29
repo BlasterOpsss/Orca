@@ -1,0 +1,32 @@
+{
+  "name": "solana-launchpad",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Minimal token launchpad on Solana: mint an SPL token, create an Orca Splash pool, seed full-range liquidity.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "launch": "tsx scripts/launch.ts"
+  },
+  "dependencies": {
+    "@orca-so/whirlpools": "latest",
+    "@orca-so/whirlpools-client": "latest",
+    "@solana-program/system": "0.10.0",
+    "@solana-program/token": "0.9.0",
+    "@solana/kit": "^5.0.0",
+    "@solana/wallet-standard-features": "latest",
+    "@wallet-standard/app": "latest",
+    "@wallet-standard/features": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vite": "latest",
+    "vite-plugin-top-level-await": "latest",
+    "vite-plugin-wasm": "latest"
+  }
+}
